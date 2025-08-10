@@ -32,4 +32,4 @@ This architecture ensures high availability and resilience, as a single server i
 
 ## Load Test Results
 
-The final stress test pushed the solution to its limits, simulating a massive load of **91,500 virtual users** over 4 minutes. The system successfully handled over **45 million messages** with a near-perfect success rate. The server's CPU remained below 50% utilization, confirming that the architecture is highly performant and the solution is ready for a production environment.
+The final stress test pushed the solution to its limits, simulating a massive load of **91,500 virtual users** over 4 minutes. The system successfully handled over **45 million messages** with a near-perfect success rate. The server's CPU remained below 50% utilization, confirming that the architecture is highly performant and the solution is ready for a production environment. For a detailed report of the stress test results, see the [full report](report.md).
