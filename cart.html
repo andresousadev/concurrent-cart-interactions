@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-time Cart PoC Client</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        .container { max-width: 600px; margin: auto; }
+        h1, h2 { color: #333; }
+        #cart { border: 1px solid #ccc; padding: 15px; border-radius: 8px; margin-top: 20px; }
+        #cartItems { list-style-type: none; padding: 0; }
+        #cartItems li { padding: 8px 0; border-bottom: 1px solid #eee; }
+        #cartItems li:last-child { border-bottom: none; }
+        .total-price { font-weight: bold; font-size: 1.2em; color: green; margin-top: 10px; }
+        .controls { margin-top: 20px; display: flex; gap: 10px; }
+        .button {
+            padding: 10px 15px;
+            border: none;
+            background-color: #007BFF;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .button:hover { background-color: #0056b3; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Real-time Cart PoC</h1>
+        <p>Open this page in multiple tabs to see the real-time updates. The session ID is randomly generated below.</p>
+        
+        <h2>Session ID: <span id="sessionIdDisplay"></span></h2>
+
+        <div id="cart">
+            <h2>Current Cart</h2>
+            <ul id="cartItems">
+                <li>Cart is empty.</li>
+            </ul>
+            <div class="total-price">Total Price: <span id="totalPrice">0.00</span></div>
+        </div>
+
+        <div class="controls">
+            <button class="button" onclick="addItem('pizza')">Add Pizza</button>
+            <button class="button" onclick="addItem('soda')">Add Soda</button>
+            <button class="button" onclick="addItem('salad')">Add Salad</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script>
+        // Generate a random session ID to simulate different tables
+        // You can also hardcode it to test a specific session
+        let sessionId = localStorage.getItem('currentSessionId');
+        if (!sessionId) {
+            sessionId = 'table-' + Math.random().toString(36).substring(2, 8);
+            localStorage.setItem('currentSessionId', sessionId);
+        }
+        document.getElementById('sessionIdDisplay').innerText = sessionId;
+
+        const socket = io('http://localhost:3000', {
+            query: { sessionId }
+        });
+
+        const itemsData = {
+            'pizza': { productId: 'pizza-001', unitPrice: '12.50' },
+            'soda': { productId: 'soda-002', unitPrice: '2.00' },
+            'salad': { productId: 'salad-003', unitPrice: '8.75' },
+        };
+
+        socket.on('connect', () => {
+            console.log('Connected to WebSocket server');
+        });
+
+        socket.on('cart-updated', (cart) => {
+            console.log('Cart updated:', cart);
+            const itemsList = document.getElementById('cartItems');
+            itemsList.innerHTML = '';
+            if (cart.items.length === 0) {
+                itemsList.innerHTML = '<li>Cart is empty.</li>';
+            } else {
+                cart.items.forEach(item => {
+                    const li = document.createElement('li');
+                    li.innerText = `${item.productId} x${item.quantity} ($${item.unitPrice})`;
+                    itemsList.appendChild(li);
+                });
+            }
+            document.getElementById('totalPrice').innerText = cart.totalPrice;
+        });
+
+        function addItem(itemType) {
+            const item = itemsData[itemType];
+            socket.emit('add-item', { 
+                productId: item.productId, 
+                quantity: 1, 
+                unitPrice: item.unitPrice 
+            });
+        }
+    </script>
+</body>
+</html>

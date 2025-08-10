@@ -1,0 +1,38 @@
+services:
+  redis:
+    image: redis:6.2-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    restart: always
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nestjs-api
+    ports:
+      - "3000:3000"
+      - "9229:9229"
+    depends_on:
+      - redis
+    volumes:
+      - ./nestjs-app:/app
+      - /app/node_modules
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+  redisinsight:
+    image: redislabs/redisinsight:latest
+    ports:
+      - "5540:5540"
+    volumes:
+      - ./redisinsight:/db
+  glances:
+    image: nicolargo/glances:latest
+    container_name: glances
+    ports:
+      - "61208:61208"
+    environment:
+      - GLANCES_OPT=-w
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro

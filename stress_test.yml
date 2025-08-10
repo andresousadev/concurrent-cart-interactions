@@ -1,0 +1,35 @@
+config:
+  target: "http://localhost:3000"
+  engines:
+    socketio-v3:
+      transports: ["websocket"]
+      query:
+        id: "{{ $loopId % 2500 }}"
+  phases:
+    - duration: 60
+      arrivalRate: 50
+      rampTo: 500
+      name: "Ramp up to extreme load"
+    - duration: 120
+      arrivalRate: 500
+      name: "Sustain extreme load"
+    - duration: 60
+      arrivalRate: 500
+      rampTo: 0
+      name: "Ramp down"
+  defaults:
+    headers:
+      Content-Type: "application/json"
+
+scenarios:
+  - name: "Concurrent Cart Adds"
+    engine: "socketio-v3"
+    flow:
+      - loop:
+        - emit:
+            channel: "add-item"
+            data:
+              productId: "product-{{ $loopId }}"
+              quantity: 1
+              unitPrice: "15.99"
+        count: 500
